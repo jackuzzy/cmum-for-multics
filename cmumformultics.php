@@ -28,11 +28,11 @@ date_default_timezone_set(TIMEZONE);
 mb_internal_encoding(CHARSET);
 
 function consolewrite($input) {
-	print("[".date("Y-m-d H:i:s")."] ".$input."\n");
+	print(date("Y-m-d H:i:s") ."$input"."\n");
 }
 
 function checkconfig() {
-	if(DBHOST=="" || DBUSER=="" || DBPASS=="" || DBNAME=="" || CHARSET=="" || TIMEZONE=="" || PROFILEFIELD=="") {
+	if(empty(DBHOST) || empty(DBUSER) || empty(DBPASS) || empty(DBNAME) || empty(CHARSET) || empty(TIMEZONE) || empty(PROFILEFIELD)) {
 		consolewrite("configuration incomplete, aborting");
 		exit;
 	}
@@ -42,16 +42,16 @@ function checkfile($type,$file) {
 	clearstatcache();
 	if(file_exists($file)) {
 		if(!is_writable($file)) {
-			consolewrite($type." is not writable, aborting");
+                        consolewrite("{$type} is not writable, aborting");
 			exit;
 		} else {
-			consolewrite("truncating ".$type." file");
+			consolewrite("truncating {$type} file");
 			$exfile=fopen($file,"w");
 			ftruncate($exfile,0);
 			fclose($exfile);
 		}
 	} else {
-		consolewrite($type." file do not exists, creating file");
+		consolewrite("{$type} does not exists, creating..");
 		$newfile=fopen($file,"w");
 		fclose($newfile);
 	}
@@ -59,10 +59,10 @@ function checkfile($type,$file) {
 
 function getprofiles() {
 	$mysqli=new mysqli(DBHOST,DBUSER,DBPASS,DBNAME);
-		$psql=$mysqli->query("SELECT id,".PROFILEFIELD." FROM profiles");
+		$psql=$mysqli->query("SELECT id,{PROFILEFIELD} FROM profiles");
 		$profiles=array();
 			while($pdata=$psql->fetch_array()) {
-				$profiles[$pdata["id"]]=$pdata[PROFILEFIELD];
+				$profiles[$pdata['id']]=$pdata[PROFILEFIELD];
 			}
 	mysqli_close($mysqli);
 return($profiles);
@@ -76,14 +76,14 @@ function gencccamusers($file) {
 				while($usrdata=$users->fetch_array()) {
 					$profres="";
 					$profvalues="";
-					if($usrdata["profiles"]=="") {
+					if($usrdata['profiles']=="") {
 						$profres="";
 					} else {
-						$dbprof=unserialize($usrdata["profiles"]);
+						$dbprof=unserialize($usrdata['profiles']);
 						$cmumprof=getprofiles();
 							if($dbprof<>"" && $dbprof<>"N;") {
 								foreach($dbprof as $useprof) {
-									$profvalues.=$cmumprof[$useprof].", ";
+									$profvalues.=$cmumprof['$useprof'];
 								}
 								$profres=trim($profvalues);
 								$profres=substr($profres,0,-1);
@@ -93,17 +93,17 @@ function gencccamusers($file) {
 								$profres="";
 							}
 					}
-					if($usrdata["ipmask"]<>"") {
-	 					$usripmask="host=".$usrdata["ipmask"]."; ";
+					if($usrdata['ipmask']<>"") {
+	 					$usripmask="host={$usrdata['ipmask']}; ";
  					} else {
 	 					$usripmask="";
  					}
- 					if($usrdata["displayname"]<>"") {
-	 					$usrdisplayname="name=".$usrdata["displayname"]."; ";
+ 					if($usrdata['displayname']<>"") {
+	 					$usrdisplayname="name={$usrdata['displayname']}; ";
  					} else {
 	 					$usrdisplayname="";
  					}
-					$cccamusers.="F: ".$usrdata["user"]." ".$usrdata["password"]." { ".$profres."; ".$usripmask.$usrdisplayname."}\n";	
+                                        $cccamusers .= "F: {$usrdata['user']} {$usrdata['password']} {{$profres}; {$usripmask} {$usrdisplayname}}\n";	
 				}
 		mysqli_close($mysqli);
 		$usrfile=fopen($file,"w");
@@ -119,14 +119,14 @@ function genmgcamdusers($file) {
 				while($usrdata=$users->fetch_array()) {
 					$profres="";
 					$profvalues="";
-					if($usrdata["profiles"]=="") {
+					if($usrdata['profiles']=="") {
 						$profres="";
 					} else {
-						$dbprof=unserialize($usrdata["profiles"]);
+						$dbprof=unserialize($usrdata['profiles']);
 						$cmumprof=getprofiles();
 							if($dbprof<>"" && $dbprof<>"N;") {
 								foreach($dbprof as $useprof) {
-									$profvalues.=$cmumprof[$useprof].", ";
+									$profvalues.=$cmumprof["{$useprof}"];
 								}
 								$profres=trim($profvalues);
 								$profres=substr($profres,0,-1);
@@ -136,17 +136,17 @@ function genmgcamdusers($file) {
 								$profres="";
 							}
 					}
-					if($usrdata["ipmask"]<>"") {
-	 					$usripmask="host=".$usrdata["ipmask"]."; ";
+					if($usrdata['ipmask']<>"") {
+	 					$usripmask="host={$usrdata['ipmask']}; ";
  					} else {
 	 					$usripmask="";
  					}
- 					if($usrdata["displayname"]<>"") {
-	 					$usrdisplayname="name=".$usrdata["displayname"]."; ";
+ 					if($usrdata['displayname']<>"") {
+	 					$usrdisplayname="name={$usrdata['displayname']}; ";
  					} else {
 	 					$usrdisplayname="";
  					}
-					$mgcamdusers.="MG: ".$usrdata["user"]." ".$usrdata["password"]." { ".$profres."; ".$usripmask.$usrdisplayname."}\n";	
+                                        $mgcamdusers.="MG: {$usrdata['user']} {$usrdata['password']} {{$profres}; {$usripmask} {$usrdisplayname}}\n";	
 				}
 		mysqli_close($mysqli);
 		$usrfile=fopen($file,"w");
@@ -162,14 +162,14 @@ function gennewcamdusers($file) {
 				while($usrdata=$users->fetch_array()) {
 					$profres="";
 					$profvalues="";
-					if($usrdata["profiles"]=="") {
+					if($usrdata['profiles']=="") {
 						$profres="";
 					} else {
-						$dbprof=unserialize($usrdata["profiles"]);
+						$dbprof=unserialize($usrdata['profiles']);
 						$cmumprof=getprofiles();
 							if($dbprof<>"" && $dbprof<>"N;") {
 								foreach($dbprof as $useprof) {
-									$profvalues.=$cmumprof[$useprof].", ";
+                                                                        $profvalues.=$cmumprof["{$useprof}"];
 								}
 								$profres=trim($profvalues);
 								$profres=substr($profres,0,-1);
@@ -179,7 +179,7 @@ function gennewcamdusers($file) {
 								$profres="";
 							}
 					}
-					$newcamdusers.="USER: ".$usrdata["user"]." ".$usrdata["password"]." { ".$profres." }\n";	
+					$newcamdusers.="USER: {$usrdata['user']} {$usrdata['password']} { {$profres} }\n";	
 				}
 		mysqli_close($mysqli);
 		$usrfile=fopen($file,"w");
@@ -187,7 +187,7 @@ function gennewcamdusers($file) {
 		fclose($usrfile);
 }
 
-consolewrite("cmum-for-multics v".VERSION." by dukereborn");
+consolewrite("cmum-for-multics v{VERSION} by dukereborn");
 consolewrite("checking configuration");
 	checkconfig();
 consolewrite("checking loop");
